@@ -160,7 +160,7 @@ union splits
   }};
 
   /// @brief Array to easily obtain the correct substition box.
-  static a_sboxes sboxes =
+  inline const a_sboxes sboxes =
   {
     sbox_one,
     sbox_two, 

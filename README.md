@@ -27,7 +27,7 @@ cd build
 cmake ..
 make
 ```
-The executable will be generated in the `bin/` directory.
+The executable will be generated in the `build/bin/` directory.
 
 ## Usage
 ```
@@ -39,3 +39,7 @@ Running the executable performs a basic encryption test using known DES test vec
 * No external cryptography libraries are used.
 * All permutation tables and S-boxes are defined explicitly
 * Bit operations are performed MSB-first, following the DES specification
+
+## Potential Future improvements:
+* Unit Testing
+* Decryption
