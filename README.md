@@ -1,12 +1,7 @@
 # DES Fun
-
-An educational C++ implementation of the **Data Encryption Standard (DES)**
-encryption algorithm.
-
-This project was created as a learning exercise focused on:
-- Bit-level manipulation
-- Permutation tables and S-box processing
-- Implementing a well-defined cryptographic specification in modern C++
+This project is a side project implementing the **Data Encryption Standard (DES)**
+encryption algorithm in C++. It was inspired by a discussion with a friend who
+implemented DES in Python as part of a college course.
 
 For background on the DES algorithm, see:
 [Data Encryption Standard (DES)](https://en.wikipedia.org/wiki/Data_Encryption_Standard).
