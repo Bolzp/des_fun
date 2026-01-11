@@ -28,7 +28,7 @@ The executable will be generated in the `build/bin/` directory.
 ```
 ./bin/des_fun
 ```
-Running the executable performs a basic encryption test using known DES test vectors and prints the results to standard output.
+Running the executable performs a basic encryption and decryption tests using known DES test vectors and prints the results to standard output.
 
 ## Notes
 * No external cryptography libraries are used.
@@ -37,4 +37,3 @@ Running the executable performs a basic encryption test using known DES test vec
 
 ## Potential Future improvements:
 * Unit Testing
-* Decryption

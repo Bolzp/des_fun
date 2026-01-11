@@ -9,24 +9,6 @@
 
 namespace des_fun
 {
-union splits
-{
-  splits()
-  {
-    value = 0;
-    halves.extra = 0;
-    halves.left = 0;
-    halves.right = 0;
-  }
-  uint64_t value = 0;
-  struct
-  {
-    uint64_t right: 28;
-    uint64_t left: 28;
-    uint64_t extra: 8;
-  } halves;
-};
-
   /// @brief For ease of use with the sboxes
   typedef std::array<std::array<uint8_t, 16>, 4> sbox;
 
@@ -265,8 +247,6 @@ union splits
      */
     void initial_key_trans();
 
-    void initial_key_trans_halves();
-
     /**
      * @brief Shifts a 28 bit value by the provide number of n bits
      * in the leftward cirular motion.
@@ -279,9 +259,6 @@ union splits
 
     /// @brief Maintains the initial key provided.
     uint64_t i_key;
-
-    /// @brief For containing the key
-    des_fun::splits curr_round_key;
 
     /// @brief For containing the 28 bit left key
     uint32_t left_key;
@@ -340,6 +317,8 @@ union splits
      * @return The encrypted value.
      */
     uint64_t encrypt(uint64_t data, uint64_t key);
+
+    uint64_t decrypt(uint64_t data, uint64_t key);
 
     uint64_t process(uint64_t data, uint64_t key, bool decrypt = false);
 

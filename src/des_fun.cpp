@@ -75,37 +75,12 @@ void des_fun::des_key::set_i_key(uint64_t key)
   // if I key changes it's a new encryption.
   round_counter = 0;
   initial_key_trans();
-  initial_key_trans_halves();
   generate_round_keys();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint64_t des_fun::des_key::get_round_key()
-{
-  uint8_t curr_round = round_counter++;
-  // Shift the two halves.
-  curr_round_key.halves.left = 
-    left_n_bit_circle_shift(curr_round_key.halves.left, 
-                            fiestel_round_shift_bits.at(curr_round));
-  curr_round_key.halves.right = 
-    left_n_bit_circle_shift(curr_round_key.halves.right, 
-                            fiestel_round_shift_bits.at(curr_round));
-  return des_fun::permutate_msb(des_fun::sec_perm_table, 
-                                curr_round_key.value,
-                                56);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void des_fun::des_key::initial_key_trans()
-{
-  curr_round_key.value = des_fun::permutate_msb(des_fun::fir_perm_table, i_key, 64);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void des_fun::des_key::initial_key_trans_halves()
 {
   uint64_t trans_key = des_fun::permutate_msb(des_fun::fir_perm_table, 
                                               i_key, 
@@ -154,26 +129,12 @@ void des_fun::des_key::generate_round_keys()
 
 uint64_t des_fun::encryptor::encrypt(uint64_t data, uint64_t key)
 {
-  e_key.set_i_key(key);
+  return process(data, key, false);
+}
 
-  data = des_fun::permutate_msb(des_fun::int_perm_table, 
-                                data,
-                                des_fun::data_size::size_64);
-  uint32_t left_half = (data & ~(gen_mask(des_fun::data_size::size_32))) >> des_fun::data_size::size_32;
-  uint32_t right_half = data & gen_mask(32);
-  while(e_key.get_current_round() < des_fun::total_fiestel_rounds)
-  {
-    uint32_t comp_data = mangler_func(right_half, e_key.get_round_key());
-    comp_data = left_half ^ comp_data;
-    left_half = right_half;
-    right_half = comp_data;
-  }
-
-  uint64_t proc_data = static_cast<uint64_t>(right_half) << des_fun::data_size::size_32;
-  proc_data |= left_half;
-  return des_fun::permutate_msb(des_fun::inv_perm_table, 
-                                proc_data,
-                                des_fun::data_size::size_64);
+uint64_t des_fun::encryptor::decrypt(uint64_t data, uint64_t key)
+{
+  return process(data, key, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,8 +147,6 @@ uint64_t des_fun::encryptor::process(uint64_t data, uint64_t key, bool decrypt)
                                 data,
                                 des_fun::data_size::size_64);
   uint64_t mask_32 = gen_mask(des_fun::size_32);
-  // uint32_t left_half = (data & ~(gen_mask(des_fun::size_32))) >> des_fun::data_size::size_32;
-  // uint32_t right_half = data & gen_mask(des_fun::size_32));
   uint32_t left_half = static_cast<uint32_t>((data >> des_fun::size_32) & mask_32);
   uint32_t right_half = static_cast<uint32_t>(data & mask_32);
 
