@@ -46,5 +46,13 @@ int main()
   std::cout << (des_encryptor.encrypt(0x0123456789ABCDEF, 0x133457799BBCDFF1) == 0x85E813540F0AB405) << std::endl;
   std::cout << (des_encryptor.encrypt(0x23456ABCD132536a, 0xAABB09182736CCDD) == 0xC2490D5EC178E1D3) << std::endl;
 
+  std::cout << (des_encryptor.process(0x1200000000000000, 0xAABB09182736CCDD) == 0x492967C4E99F8523) << std::endl;
+  std::cout << (des_encryptor.process(0x492967C4E99F8523, 0xAABB09182736CCDD, true) == 0x1200000000000000) << std::endl;
+  std::cout << (des_encryptor.process(0x0123456789ABCDEF, 0x133457799BBCDFF1) == 0x85E813540F0AB405) << std::endl;
+  std::cout << (des_encryptor.process(0x85E813540F0AB405, 0x133457799BBCDFF1, true) == 0x0123456789ABCDEF) << std::endl;
+  std::cout << (des_encryptor.process(0x23456ABCD132536a, 0xAABB09182736CCDD) == 0xC2490D5EC178E1D3) << std::endl;
+  std::cout << (des_encryptor.process(0xC2490D5EC178E1D3, 0xAABB09182736CCDD, true) == 0x23456ABCD132536a) << std::endl;
+
+
   std::cout << "bye world!" << std::endl;
 }

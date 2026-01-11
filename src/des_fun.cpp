@@ -75,6 +75,8 @@ void des_fun::des_key::set_i_key(uint64_t key)
   // if I key changes it's a new encryption.
   round_counter = 0;
   initial_key_trans();
+  initial_key_trans_halves();
+  generate_round_keys();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +105,18 @@ void des_fun::des_key::initial_key_trans()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void des_fun::des_key::initial_key_trans_halves()
+{
+  uint64_t trans_key = des_fun::permutate_msb(des_fun::fir_perm_table, 
+                                              i_key, 
+                                              des_fun::size_64);
+  const uint64_t mask_28 = des_fun::gen_mask(des_fun::size_28);
+  left_key = static_cast<uint32_t>(((trans_key >> des_fun::size_28) & mask_28));
+  right_key = static_cast<uint32_t>(trans_key & mask_28);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 uint32_t des_fun::des_key::left_n_bit_circle_shift(uint32_t value,  
                                                    uint8_t shift_bit_size)
 {
@@ -110,6 +124,30 @@ uint32_t des_fun::des_key::left_n_bit_circle_shift(uint32_t value,
   uint32_t new_value = value & mask;
   new_value =((new_value << shift_bit_size) | (new_value >> (des_fun::des_key::key_halves_bit_size - shift_bit_size)));
   return new_value & mask;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint64_t des_fun::des_key::create_round_key(uint8_t round_counter)
+{
+  //const uint32_t mask_28 = des_fun::gen_mask(des_fun::size_28);
+  const uint8_t r_shift = fiestel_round_shift_bits.at(round_counter);
+
+  left_key = left_n_bit_circle_shift(left_key, r_shift);
+  right_key = left_n_bit_circle_shift(right_key, r_shift);
+
+  const uint64_t r_value = ((static_cast<uint64_t>(left_key) << des_fun::size_28) | right_key);
+  return des_fun::permutate_msb(des_fun::sec_perm_table, r_value, des_fun::size_56);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void des_fun::des_key::generate_round_keys()
+{
+  for(auto i = 0; i < round_keys.size(); i++)
+  {
+    round_keys.at(i) = create_round_key(i);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +164,37 @@ uint64_t des_fun::encryptor::encrypt(uint64_t data, uint64_t key)
   while(e_key.get_current_round() < des_fun::total_fiestel_rounds)
   {
     uint32_t comp_data = mangler_func(right_half, e_key.get_round_key());
+    comp_data = left_half ^ comp_data;
+    left_half = right_half;
+    right_half = comp_data;
+  }
+
+  uint64_t proc_data = static_cast<uint64_t>(right_half) << des_fun::data_size::size_32;
+  proc_data |= left_half;
+  return des_fun::permutate_msb(des_fun::inv_perm_table, 
+                                proc_data,
+                                des_fun::data_size::size_64);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint64_t des_fun::encryptor::process(uint64_t data, uint64_t key, bool decrypt)
+{
+  e_key.set_i_key(key);
+
+  data = des_fun::permutate_msb(des_fun::int_perm_table,
+                                data,
+                                des_fun::data_size::size_64);
+  uint64_t mask_32 = gen_mask(des_fun::size_32);
+  // uint32_t left_half = (data & ~(gen_mask(des_fun::size_32))) >> des_fun::data_size::size_32;
+  // uint32_t right_half = data & gen_mask(des_fun::size_32));
+  uint32_t left_half = static_cast<uint32_t>((data >> des_fun::size_32) & mask_32);
+  uint32_t right_half = static_cast<uint32_t>(data & mask_32);
+
+  for(auto i = 0; i < des_fun::total_fiestel_rounds; i++)
+  {
+    uint8_t round_key = decrypt ? (des_fun::total_fiestel_rounds - (i + 1)) : i;
+    uint32_t comp_data = mangler_func(right_half, e_key.get_round_key(round_key));
     comp_data = left_half ^ comp_data;
     left_half = right_half;
     right_half = comp_data;

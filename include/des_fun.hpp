@@ -254,12 +254,18 @@ union splits
      */
     uint64_t get_round_key();
 
+    void generate_round_keys();
+
+    inline uint64_t get_round_key(uint8_t round) const {return round_keys.at(round); }
+
     private:
     /**
      * @brief Conducts the initital transformation on the i_key that is needed
      * for DES encryption.
      */
     void initial_key_trans();
+
+    void initial_key_trans_halves();
 
     /**
      * @brief Shifts a 28 bit value by the provide number of n bits
@@ -294,6 +300,10 @@ union splits
 
     /// @brief For keeping track of which round we are currently in.
     uint8_t round_counter;
+
+    uint64_t create_round_key(uint8_t round_counter);
+
+    std::array<uint64_t, 16> round_keys;
 
     /// @brief For easily indexing to the correct shift bit for each round.
     std::array<uint8_t, 16> fiestel_round_shift_bits
@@ -330,6 +340,8 @@ union splits
      * @return The encrypted value.
      */
     uint64_t encrypt(uint64_t data, uint64_t key);
+
+    uint64_t process(uint64_t data, uint64_t key, bool decrypt = false);
 
     private:
     /**
